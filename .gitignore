@@ -1,2 +1,7 @@
-/dataset
-*.log
+# Ignore dataset and model files
+dataset/
+train_validation/
+*.zip
+*.h5
+*.pt
+*.npy
