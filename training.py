@@ -90,8 +90,7 @@ class IntelDataset:
         image = image.resize((224, 224))  # Resize all images to 224x224
         image = np.array(image) / 255.0   # Normalize to [0,1]
         return image, label
-
-# ----------- Custom Dataloader -----------
+    # ----------- Custom Dataloader -----------
 class Dataloader:
     def __init__(self, dataset1, dataset2, batch_size, shuffle=False):
         print("dataloader ...")
