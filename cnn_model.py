@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # import numpy as np
 # import tensorflow as tf
 # import os, json, itertools
@@ -308,3 +309,5 @@ def predict_image(image_path):
     print(f"This image is {predicted_label} with a {confidence:.2f}% confidence.")
  
     return predicted_label
+
+
