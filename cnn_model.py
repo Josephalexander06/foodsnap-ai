@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # import numpy as np
 # import tensorflow as tf
 # import os, json, itertools
@@ -280,7 +280,7 @@ else:
                         steps_per_epoch=trainGenerator.n//trainGenerator.batch_size,
                             validation_steps=validGenerator.n//validGenerator.batch_size,
                             callbacks=[early],
-                        epochs=20)
+                        epochs=30)
 
     model.save('model_saved.h5')
 

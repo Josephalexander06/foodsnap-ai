@@ -1,6 +1,7 @@
 # Ignore dataset and model files
 dataset/
 train_validation/
+media/
 *.zip
 *.h5
 *.pt

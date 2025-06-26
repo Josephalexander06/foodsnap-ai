@@ -8,7 +8,6 @@ dataset_folder = ("dataset/")
 
 food_items = [name for name in os.listdir(dataset_folder)
               if os.path.isdir(os.path.join(dataset_folder,name))]
-
 # print(food_items)
 conn =sqlite3.connect('nutrition.db')
 cur = conn.cursor()
@@ -77,9 +76,6 @@ cur.execute('''CREATE TABLE IF NOT EXISTS nutrition (
 #         print(f"[Other Error] {e}")
 #         return None
 
-
-
-
 def clean_food_name(name):
     # Replace underscores, remove digits, strip extras
     name = name.replace("_", " ")
@@ -107,48 +103,75 @@ def extract_nutrients(detail_data):
     carbs   = nutrient_map[1005]
     return calories, protein, fat, carbs
 
-def get_nutrition(food_name):
-    # print(f"\n🔍 Getting nutrition for: {food_name}")
-    search_query = clean_food_name(food_name)
-  
-    try:
-        def search_usda(query, data_type):
-            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?query={query}&dataType={data_type}&api_key={API_KEY}"
-            return requests.get(url).json().get("foods", [])
+def search_usda(query, data_type):
+    url = "https://api.nal.usda.gov/fdc/v1/foods/search"
+    params = {
+        "query": query+",raw",
+        "api_key": API_KEY,
+        "dataType": data_type
+    }
+    res = requests.get(url, params=params)
+    res.raise_for_status()
+    return res.json().get("foods", [])
 
-        results = search_usda(search_query, "Foundation,SR Legacy")
 
-        if not results:
-            print(f"[{food_name}] 🔁 Retrying with Survey & Branded...")
-            results = search_usda(search_query, "Survey (FNDDS),Branded")
-        
+def get_food_nutrition(food_name):
+    search_query = food_name.strip().lower()
 
-        if not results:
-            print(f"[{food_name}] ❌ No search results.")
-            return 0, 0, 0, 0, 0, ''
+    def get_results(preferred_query, data_type):
+        try:
+            return search_usda(preferred_query, data_type)
+        except Exception:
+            return []
 
-        for food in results:
+    results = get_results(search_query, "Survey (FNDDS),Branded")
+    if not results:
+        print(f"[{food_name}] 🔁 Retrying with SR Legacy...")
+        results = get_results(search_query, "SR Legacy")
+    # if not results:
+    #     print(f"[{food_name}] 🔁 Retrying with 'raw' in SR...")
+    #     results = get_results(search_query + " raw", "SR LEgacy")
+    # if not results:
+    #     print(f"[{food_name}] 🔁 Retrying with 'raw' in query...")
+    #     results = get_results(search_query + " ,raw", "Survey (FNDDS),Branded")
+
+    if not results:
+        print(f"[{food_name}] ❌ No results.")
+        return 0, 0, 0, 0, 0, ''
+
+
+    skip_words = ['Tea','hot','WEDGES','red','juice', 'dried', 'chips', 'powder', 'flavored', 'sweetened', 'snack', 'puree', 'babyfood', 'freeze-dried', 'bars', 'syrup', 'cereal']
+
+    for food in results:
+        desc = food.get("description", "").lower()
+        if any(word in desc for word in skip_words):
+            continue
+        if 'raw' in desc or 'fresh' in desc or search_query in desc:
             fdc_id = food.get("fdcId")
+            description = food.get("description", "")
 
+            print(f"[{food_name}] ✅ Found: {description} (FDC ID: {fdc_id})")
             detail_url = f"https://api.nal.usda.gov/fdc/v1/food/{fdc_id}?api_key={API_KEY}"
-            detail_data = requests.get(detail_url).json()
+            with open("url.text","a") as f:
+                f.write(detail_url+'\n')
+            # print(detail_url)
 
+            detail_data = requests.get(detail_url).json()
             calories, protein, fat, carbs = extract_nutrients(detail_data)
 
-            return calories, protein, fat, carbs, serving_size, serving_unit
+            print(f"[{food_name}] 🍽 Calories: {calories} kcal | Protein: {protein}g | Fat: {fat}g | Carbs: {carbs}g")
+            return calories, protein, fat, carbs, 100, 'g'
 
-
-        print(f"[{food_name}] ❌ No valid nutrient data found.")
-        return 0, 0, 0, 0, 0, ''
-
-    except Exception as e:
-        print(f"[{food_name}] ❌ Error: {e}")
-        return 0, 0, 0, 0, 0, ''
+    print(f"[{food_name}] ❌ No valid nutrient data found.")
+    return 0, 0, 0, 0, 0, ''
 
 
 
-for food in food_items:
-    result = get_nutrition(food)
+for name in food_items:
+    food =  name
+    # print(food)
+    result =get_food_nutrition(food)
+
     if result:
         calories, protein, fat, carbs, serving_size, serving_unit = result  # ✅
         cur.execute("INSERT OR REPLACE INTO nutrition VALUES (?, ?, ?, ?, ?, ?)",
@@ -156,3 +179,4 @@ for food in food_items:
         
 conn.commit()
 conn.close()
+

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import UploadImageForm
-<<<<<<< HEAD
+
 from cnn_model import predict_image 
 import os
 from django.conf import settings
@@ -16,16 +16,10 @@ def get_nutrition_from_db(food_name):
     conn.close()
     return result
 
-=======
-
-
->>>>>>> 30eb68f792b1202acaea9330862ef28fc4904c44
-
 def upload_view(request):
     if request.method == 'POST':
         form = UploadImageForm(request.POST, request.FILES)
         if form.is_valid():
-<<<<<<< HEAD
             image_file = request.FILES['file']
             pre = form.save()
             url = request.session['uploaded_file_url'] = pre.file.url 
@@ -49,16 +43,7 @@ def upload_view(request):
                 'carbs': nutrition[3],
                 'image_url':  url 
             })
-=======
-            pre = form.save()
-            url = request.session['uploaded_file_url'] = pre.file.url 
-            context = {
-            'food_name': 'Pizza',
-            'food_calories': 285,
-            'image_url':  url        
-        }
-        return render(request, 'upload_success.html', context)
->>>>>>> 30eb68f792b1202acaea9330862ef28fc4904c44
+
     else:
         form = UploadImageForm()
     return render(request, 'index.html', {'form': form})
