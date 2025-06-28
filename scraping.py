@@ -98,8 +98,8 @@ def get_food_nutrition(food_name):
 
             print(f"[{food_name}] ✅ Found: {description} (FDC ID: {fdc_id})")
             detail_url = f"https://api.nal.usda.gov/fdc/v1/food/{fdc_id}?api_key={API_KEY}"
-            with open("url.text","a") as f:
-                f.write(detail_url+'\n')
+            # with open("url.text","a") as f:
+            #     f.write(detail_url+'\n')
             # print(detail_url)
 
             detail_data = requests.get(detail_url).json()
